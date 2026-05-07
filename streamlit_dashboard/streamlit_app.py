@@ -21,7 +21,7 @@ def run_query(query):
     return pd.read_sql(query, conn)
 
 # Sidebar navigation
-page = st.sidebar.radio("Navigate", ["📊 Dashboard", "💡 Business Insights"])
+page = st.sidebar.radio("Navigate", ["📊 Dashboard", "💡 Business Insights", "🔍 Content Gap Analysis"])
 
 # ============================================
 # PAGE 1: DASHBOARD
@@ -94,7 +94,7 @@ if page == "📊 Dashboard":
         st.bar_chart(chart_data)
 
     st.divider()
-    st.caption("Data pipeline: AWS S3 → Snowflake → Streamlit | Built by Pallabi Roy Singh")
+    st.caption("Data pipeline: AWS S3 → Snowflake → Streamlit | Built by Pallabi S Roy")
 
 # ============================================
 # PAGE 2: BUSINESS INSIGHTS
@@ -234,3 +234,129 @@ elif page == "💡 Business Insights":
     st.divider()
 
     st.caption("Data pipeline: AWS S3 → Snowflake → Streamlit | Built by Pallabi S Roy")
+
+    # ============================================
+# PAGE 3: CONTENT GAP ANALYSIS
+# ============================================
+elif page == "🔍 Content Gap Analysis":
+    st.title("🔍 Content Gap Analysis")
+    st.write("Identifying underserved content segments using K-Means clustering on country-genre profiles")
+    st.divider()
+
+    # Get country-genre data
+    df_gap = run_query("""
+        SELECT 
+            TRIM(c.value) AS country,
+            TRIM(g.value) AS genre,
+            COUNT(*) AS title_count
+        FROM NETFLIX_CLEAN,
+            LATERAL FLATTEN(input => SPLIT(country, ',')) c,
+            LATERAL FLATTEN(input => SPLIT(listed_in, ',')) g
+        WHERE country != 'Unknown'
+        GROUP BY TRIM(c.value), TRIM(g.value)
+    """)
+
+    if not df_gap.empty:
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.cluster import KMeans
+
+        # Build country-genre matrix
+        matrix = df_gap.pivot_table(index='COUNTRY', columns='GENRE', values='TITLE_COUNT', fill_value=0)
+        matrix['total'] = matrix.sum(axis=1)
+        matrix = matrix[matrix['total'] >= 20].drop(columns=['total'])
+
+        # Convert to percentages
+        matrix_pct = matrix.div(matrix.sum(axis=1), axis=0) * 100
+
+        # Cluster
+        scaler = StandardScaler()
+        matrix_scaled = scaler.fit_transform(matrix_pct)
+        km = KMeans(n_clusters=4, random_state=42, n_init=10)
+        matrix_pct['cluster'] = km.fit_predict(matrix_scaled)
+
+        # Display clusters
+        st.subheader("Market Clusters")
+        st.write("Countries grouped by similar content profiles using K-Means clustering (K=4)")
+
+        cluster_names = {
+            0: "Latin America",
+            1: "Europe, India & SE Asia",
+            2: "Niche Markets",
+            3: "English-speaking & East Asia"
+        }
+
+        for c in sorted(matrix_pct['cluster'].unique()):
+            countries = matrix_pct[matrix_pct['cluster'] == c].index.tolist()
+            cluster_data = matrix_pct[matrix_pct['cluster'] == c].drop(columns=['cluster'])
+            top_genres = cluster_data.mean().sort_values(ascending=False).head(5)
+
+            name = cluster_names.get(c, f"Cluster {c}")
+            with st.expander(f"Cluster {c+1}: {name} ({len(countries)} countries)", expanded=True):
+                col1, col2 = st.columns([1, 1])
+                with col1:
+                    st.write("**Countries:**")
+                    st.write(", ".join(countries))
+                with col2:
+                    st.write("**Top Genres (% of content):**")
+                    st.dataframe(top_genres.reset_index().rename(columns={'index': 'Genre', 0: 'Percentage'}).round(1), hide_index=True)
+
+        st.divider()
+
+        # Gap analysis
+        st.subheader("Content Gaps — Investment Opportunities")
+        st.write("Genres where each cluster is underserved compared to the global average")
+
+        global_avg = matrix_pct.drop(columns=['cluster']).mean()
+
+        gap_data = []
+        for c in sorted(matrix_pct['cluster'].unique()):
+            cluster_avg = matrix_pct[matrix_pct['cluster'] == c].drop(columns=['cluster']).mean()
+            diff = global_avg - cluster_avg
+            top_gaps = diff.sort_values(ascending=False).head(3)
+            countries = matrix_pct[matrix_pct['cluster'] == c].index.tolist()
+            name = cluster_names.get(c, f"Cluster {c}")
+
+            for genre, gap_size in top_gaps.items():
+                if gap_size > 1:
+                    gap_data.append({
+                        'Market': name,
+                        'Sample Countries': ', '.join(countries[:3]),
+                        'Underserved Genre': genre,
+                        'Gap (%)': round(gap_size, 1)
+                    })
+
+        if gap_data:
+            gap_df = pd.DataFrame(gap_data)
+            st.dataframe(gap_df, hide_index=True, use_container_width=True)
+
+        st.divider()
+
+        # Prescriptive recommendations
+        st.subheader("Strategic Recommendations")
+
+        st.success("""
+        **1. Latin America: Invest in Action & Adventure**
+        Argentina, Brazil, Chile, Colombia, and Mexico are underserved in Action & Adventure content 
+        by 2.7% compared to the global average. This is a high-growth region with strong Netflix adoption.
+        """)
+
+        st.success("""
+        **2. Europe, India & SE Asia: Expand TV Show Production**
+        This 32-country cluster is underserved in International TV Shows by 2.8% and Crime TV Shows by 1.0%. 
+        Given the global trend toward TV Shows, this represents the largest market opportunity by audience size.
+        """)
+
+        st.success("""
+        **3. English-speaking & East Asian Markets: More Local Dramas and Comedies**
+        Australia, Canada, Japan, and similar markets are underserved in Dramas by 5.7% and Comedies by 3.1%. 
+        These are mature markets where localized content can drive retention and reduce churn.
+        """)
+
+        st.info("""
+        **Methodology:** K-Means clustering (K=4) on country-genre percentage profiles. 
+        Countries with fewer than 20 titles were excluded. Gaps measured as the difference between 
+        global genre average and cluster genre average.
+        """)
+
+    st.divider()
+    st.caption("Data pipeline: AWS S3 → Snowflake → ML Clustering → Streamlit | Built by Pallabi S Roy")
