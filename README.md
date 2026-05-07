@@ -2,6 +2,8 @@
 
 ETL pipeline that ingests Netflix catalog data from AWS S3 into Snowflake, transforms it, and creates analytics-ready views for business intelligence.
 
+**Live Dashboard:** [Netflix Analytics Dashboard](https://netflix-data-pipeline-by-pallabisroy.streamlit.app)
+
 ## Architecture
 
 ```
