@@ -41,6 +41,9 @@ Airflow DAG (Orchestration)
 - **Apache Airflow:** Pipeline orchestration and scheduling
 - **Python:** Pipeline logic and Snowflake connector
 - **SQL:** Data transformation and view creation
+- **scikit-learn:** K-Means clustering for content gap analysis
+- **Streamlit:** Interactive 3-page analytics dashboard
+- **pandas:** Data manipulation and analysis
 
 ## Pipeline Steps
 
