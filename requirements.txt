@@ -1,0 +1,2 @@
+apache-airflow
+snowflake-connector-python
