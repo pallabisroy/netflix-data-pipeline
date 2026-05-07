@@ -36,11 +36,11 @@ Airflow DAG (Orchestration)
 
 ## Tech Stack
 
-- **AWS S3** — Data lake storage for raw files
-- **Snowflake** — Cloud data warehouse for staging, transformation, and analytics
-- **Apache Airflow** — Pipeline orchestration and scheduling
-- **Python** — Pipeline logic and Snowflake connector
-- **SQL** — Data transformation and view creation
+- **AWS S3:** Data lake storage for raw files
+- **Snowflake:** Cloud data warehouse for staging, transformation, and analytics
+- **Apache Airflow:** Pipeline orchestration and scheduling
+- **Python:** Pipeline logic and Snowflake connector
+- **SQL:** Data transformation and view creation
 
 ## Pipeline Steps
 
@@ -56,11 +56,11 @@ Creates a clean analytics table with:
 
 ### Step 3: Create Analytics Views
 Five business-ready views built on the clean data:
-- **CONTENT_BY_YEAR** — Content additions by year and type
-- **TOP_COUNTRIES** — Top 15 content-producing countries (multi-value countries unnested)
-- **TOP_GENRES** — Top 15 genres (multi-value genres unnested)
-- **MONTHLY_ADDITIONS** — Monthly addition patterns by content type
-- **RATING_DISTRIBUTION** — Rating breakdown by content type
+- **CONTENT_BY_YEAR:** Content additions by year and type
+- **TOP_COUNTRIES:** Top 15 content-producing countries (multi-value countries unnested)
+- **TOP_GENRES:** Top 15 genres (multi-value genres unnested)
+- **MONTHLY_ADDITIONS:** Monthly addition patterns by content type
+- **RATING_DISTRIBUTION:** Rating breakdown by content type
 
 ### Step 4: Validate
 Automated row count validation between RAW and ANALYTICS tables to ensure no data loss during transformation.
@@ -156,7 +156,7 @@ Three-page interactive dashboard:
 - 📊 Dashboard: Key metrics and charts from Snowflake views
 - 💡 Business Insights: Six data-driven recommendations
 - 🔍 Content Gap Analysis: K-Means clustering with prescriptive recommendations
-- 
+  
 ## Author
 
 Pallabi S Roy
