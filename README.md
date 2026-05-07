@@ -2,8 +2,6 @@
 
 ETL pipeline that ingests Netflix catalog data from AWS S3 into Snowflake, transforms it, and creates analytics-ready views for business intelligence.
 
-**Live Dashboard:** [Netflix Analytics Dashboard](https://netflix-data-pipeline-by-pallabisroy.streamlit.app)
-
 ## Architecture
 
 ```
@@ -124,7 +122,41 @@ RAW table: 8,807 rows
 CLEAN table: 8,807 rows
 VALIDATION PASSED: Row counts match
 ```
+## Content Gap Analysis (Prescriptive Analytics)
 
+K-Means clustering applied to country-genre content profiles to identify underserved market segments.
+
+### Methodology
+1. Built a country × genre matrix from Snowflake analytics views
+2. Filtered to countries with 20+ titles (57 countries, 42 genres)
+3. Normalized counts to percentages (content profile per country)
+4. Applied K-Means clustering (K=4) to group similar markets
+5. Compared each cluster's genre mix against global average to identify gaps
+
+### Key Findings
+
+| Cluster | Markets | Underserved Genre | Gap |
+|---------|---------|-------------------|-----|
+| 1 - Latin America | Argentina, Brazil, Mexico | Action & Adventure | 2.7% |
+| 2 - Europe, India & SE Asia | France, Germany, India | International TV Shows | 2.8% |
+| 2 - Europe, India & SE Asia | France, Germany, India | Crime TV Shows | 1.0% |
+| 3 - English-speaking & East Asia | Australia, Canada, Japan | Dramas | 5.7% |
+| 3 - English-speaking & East Asia | Australia, Canada, Japan | Comedies | 3.1% |
+
+### Strategic Recommendations
+1. **Latin America:** Invest in Action & Adventure content for high-growth region
+2. **Europe & India:** Expand TV Show production (largest market opportunity by audience size)
+3. **English-speaking & East Asia:** More localized Dramas and Comedies to drive retention
+
+## Live Dashboard
+
+**Streamlit App:** [Netflix Analytics Dashboard](https://netflix-data-pipeline-by-pallabisroy.streamlit.app)
+
+Three-page interactive dashboard:
+- 📊 Dashboard: Key metrics and charts from Snowflake views
+- 💡 Business Insights: Six data-driven recommendations
+- 🔍 Content Gap Analysis: K-Means clustering with prescriptive recommendations
+- 
 ## Author
 
 Pallabi S Roy
