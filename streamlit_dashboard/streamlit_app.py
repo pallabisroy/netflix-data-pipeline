@@ -16,9 +16,14 @@ def get_connection():
         schema=st.secrets["snowflake"]["schema"]
     )
 
+# Cache the QUERY RESULTS instead, not the connection
+@st.cache_data(ttl=600)  # cache results for 10 minutes
 def run_query(query):
     conn = get_connection()
-    return pd.read_sql(query, conn)
+    try:
+        return pd.read_sql(query, conn)
+    finally:
+        conn.close()
 
 # Sidebar navigation
 page = st.sidebar.radio("Navigate", ["📊 Dashboard", "💡 Business Insights", "🔍 Content Gap Analysis"])
